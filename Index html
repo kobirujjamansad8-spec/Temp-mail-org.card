@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Identity</title>
+    <style>
+        /* Reset & Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { 
+            height: 100vh; width: 100vw; overflow: hidden; 
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; justify-content: center; align-items: center;
+            color: white; text-align: center;
+        }
+
+        /* Background Animation */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Identity Verification Loader Screen */
+        #loaderScreen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+        }
+        .scanner {
+            width: 100px; height: 100px; border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #00f2fe; border-radius: 50%;
+            animation: spin 1s linear infinite, glow 2s ease-in-out infinite alternate;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes glow { 0% { box-shadow: 0 0 10px #00f2fe; } 100% { box-shadow: 0 0 30px #4facfe, 0 0 10px #00f2fe inset; } }
+        .verify-text { font-size: 24px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; animation: pulseText 1.5s infinite; }
+        @keyframes pulseText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Glassmorphism Popup Modal */
+        #popupModal {
+            display: none; /* Hidden by default */
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px;
+            padding: 40px 30px; width: 90%; max-width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        #popupModal.active { display: block; transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        .popup-icon { font-size: 50px; margin-bottom: 15px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .popup-title { font-size: 22px; font-weight: bold; margin-bottom: 15px; color: #00f2fe; }
+        .popup-desc { font-size: 15px; line-height: 1.6; margin-bottom: 25px; color: #e0e0e0; }
+        
+        /* Watch Button */
+        .watch-btn {
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            color: #1a1a1a; font-size: 16px; font-weight: bold;
+            padding: 12px 30px; border: none; border-radius: 30px;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+            transition: all 0.3s ease; outline: none;
+        }
+        .watch-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 242, 254, 0.6); }
+        .watch-btn:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+
+    <div id="loaderScreen">
+        <div class="scanner"></div>
+        <div class="verify-text">Verify Identity...</div>
+    </div>
+
+    <div id="popupModal">
+        <div class="popup-icon">🔒</div>
+        <div class="popup-title">Action Required</div>
+        <div class="popup-desc">To unlock the temp.org app, you need to watch 1 ad. Then you can use our service free for 24 hours.<br><br>Please click the Watch button below.</div>
+        <button class="watch-btn" id="watchBtn">Watch Ad</button>
+    </div>
+
+    <script>
+        const AD_URL = "https://www.effectivegatecpm.com/eqzqthtf2f?key=618372644edaa18dec3c53884dea5345";
+        const DESTINATION_URL = "https://temp-mail.org/en/";
+        const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+        // const COOLDOWN_TIME = 10 * 1000; // For testing: 10 seconds (uncomment this line to test quickly)
+
+        window.onload = () => {
+            // Wait a few seconds to simulate checking storage with animation
+            setTimeout(() => {
+                checkAccess();
+            }, 3000); // 3 seconds loading animation
+        };
+
+        function checkAccess() {
+            const lastWatched = localStorage.getItem('lastAdWatchTime');
+            const currentTime = new Date().getTime();
+
+            // Check if user has a valid timestamp within the last 24 hours
+            if (lastWatched && (currentTime - lastWatched < COOLDOWN_TIME)) {
+                // User already watched ad within 24h -> Redirect directly
+                document.querySelector('.verify-text').innerText = "Access Granted!";
+                setTimeout(() => {
+                    window.location.href = DESTINATION_URL;
+                }, 1000);
+            } else {
+                // User hasn't watched ad, or 24 hours have passed -> Show Popup
+                document.getElementById('loaderScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loaderScreen').style.display = 'none';
+                    const popup = document.getElementById('popupModal');
+                    popup.classList.add('active');
+                }, 1000);
+            }
+        }
+
+        // Button Click Event
+        document.getElementById('watchBtn').addEventListener('click', () => {
+            // Save the current timestamp to Local Storage (unlocking for 24 hours)
+            localStorage.setItem('lastAdWatchTime', new Date().getTime());
+            
+            // Open the Adsterra ad in a NEW tab
+            window.open(AD_URL, '_blank');
+
+            // Change button text and redirect the CURRENT tab to temp-mail
+            document.getElementById('watchBtn').innerText = "Unlocking...";
+            setTimeout(() => {
+                window.location.href = DESTINATION_URL;
+            }, 1500); // Wait 1.5 seconds before redirecting main page
+        });
+    </script>
+</body>
+</html>
